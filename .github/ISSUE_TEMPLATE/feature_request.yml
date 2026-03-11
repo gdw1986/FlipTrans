@@ -1,0 +1,21 @@
+name: Feature Request
+about: 提出新功能/改进
+labels: [enhancement]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        欢迎提出想法！请描述清楚使用场景。
+  - type: textarea
+    id: idea
+    attributes:
+      label: 想法说明
+      description: 希望新增/改进什么？
+    validations:
+      required: true
+  - type: textarea
+    id: value
+    attributes:
+      label: 价值/收益
+      description: 这个功能能解决什么问题？

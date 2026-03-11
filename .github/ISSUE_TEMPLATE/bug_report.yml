@@ -1,0 +1,31 @@
+name: Bug Report
+about: 报告一个问题
+labels: [bug]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢你的反馈！请尽可能详细描述问题，便于快速定位。
+  - type: input
+    id: version
+    attributes:
+      label: 版本号
+      placeholder: 例如 v0.1.0
+  - type: textarea
+    id: description
+    attributes:
+      label: 问题描述
+      description: 发生了什么？期望是什么？
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 1. ... 2. ... 3. ...
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志/截图
+      description: 粘贴日志或截图链接

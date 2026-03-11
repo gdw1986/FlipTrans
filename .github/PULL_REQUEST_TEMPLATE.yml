@@ -1,0 +1,25 @@
+name: Pull Request
+about: PR 模板
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        请填写以下信息，便于评审与回滚。
+  - type: textarea
+    id: summary
+    attributes:
+      label: 变更概述
+      description: 这次 PR 做了什么？
+    validations:
+      required: true
+  - type: textarea
+    id: testing
+    attributes:
+      label: 测试情况
+      description: 如何验证？
+  - type: textarea
+    id: notes
+    attributes:
+      label: 备注
+      description: 其他需要说明的内容
