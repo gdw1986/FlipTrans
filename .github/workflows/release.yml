@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag (e.g. v0.1.0)"
-        required: true
+        description: "Release tag (e.g. v0.1.0). Leave empty to use v<package.json version>"
+        required: false
         type: string
       name:
-        description: "Release name"
+        description: "Release name (optional)"
         required: false
         type: string
 
@@ -59,15 +59,33 @@ jobs:
         with:
           path: dist
 
+      - name: Resolve version
+        id: version
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [ -z "${{ inputs.tag }}" ]; then
+            TAG="v${VERSION}"
+          else
+            TAG="${{ inputs.tag }}"
+          fi
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          if [ -z "${{ inputs.name }}" ]; then
+            NAME="${TAG}"
+          else
+            NAME="${{ inputs.name }}"
+          fi
+          echo "name=${NAME}" >> $GITHUB_OUTPUT
+
       - name: Create tag
         run: |
-          git tag ${{ inputs.tag }}
-          git push origin ${{ inputs.tag }}
+          git tag ${{ steps.version.outputs.tag }}
+          git push origin ${{ steps.version.outputs.tag }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ inputs.tag }}
-          name: ${{ inputs.name || inputs.tag }}
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.name }}
           files: |
             dist/**
