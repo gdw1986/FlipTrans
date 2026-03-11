@@ -10,6 +10,10 @@ pub struct AppConfig {
     pub api_key: String,
     pub model: String,
     pub direction: String, // "zh->en" | "en->zh"
+    #[serde(default)]
+    pub tts_voice_zh: String,
+    #[serde(default)]
+    pub tts_voice_en: String,
 }
 
 impl Default for AppConfig {
@@ -19,6 +23,8 @@ impl Default for AppConfig {
             api_key: "".to_string(),
             model: "gpt-4o-mini".to_string(),
             direction: "zh->en".to_string(),
+            tts_voice_zh: "".to_string(),
+            tts_voice_en: "".to_string(),
         }
     }
 }

@@ -7,6 +7,8 @@ const DEFAULT_CFG = {
   api_key: "",
   model: "gpt-4o-mini",
   direction: "zh->en",
+  tts_voice_zh: "",
+  tts_voice_en: "",
 };
 
 function nowTs() {
@@ -38,13 +40,33 @@ function detectDirection(text) {
   return null;
 }
 
-function pickVoice(voices, lang) {
+function pickVoice(voices, preferredName, lang) {
   if (!voices || voices.length === 0) return null;
   const exact = voices.filter((v) => (v.lang || "").toLowerCase() === lang.toLowerCase());
   const prefix = voices.filter((v) => (v.lang || "").toLowerCase().startsWith(lang.toLowerCase()));
   const pool = exact.length ? exact : prefix.length ? prefix : voices;
-  const preferred = pool.find((v) => /Xiaoxiao|Xiaoyi|Yunxi|Microsoft|Google/i.test(v.name));
-  return preferred || pool[0];
+  if (preferredName) {
+    const preferred = pool.find((v) => v.name === preferredName) || pool.find((v) => v.name.includes(preferredName));
+    if (preferred) return preferred;
+  }
+  const fallback = pool.find((v) => /Xiaoxiao|Xiaoyi|Yunxi|Microsoft|Google|Natural/i.test(v.name));
+  return fallback || pool[0];
+}
+
+function normalizeVoiceList(voices) {
+  const list = (voices || [])
+    .map((v) => ({ name: v.name || "", lang: v.lang || "" }))
+    .filter((v) => v.name && v.lang);
+  const seen = new Set();
+  const out = [];
+  for (const v of list) {
+    const key = `${v.name}__${v.lang}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      out.push(v);
+    }
+  }
+  return out.sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export default function App() {
@@ -58,6 +80,7 @@ export default function App() {
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState("");
   const [toast, setToast] = useState("");
+  const [voiceOptions, setVoiceOptions] = useState([]);
 
   const toastTimerRef = useRef(null);
   const voiceRef = useRef(null);
@@ -82,11 +105,15 @@ export default function App() {
   useEffect(() => {
     const synth = window.speechSynthesis;
     if (!synth) return;
-    const lang = cfg.direction === "zh->en" ? "en" : "zh";
+    const isEn = cfg.direction === "zh->en";
+    const lang = isEn ? "en" : "zh";
+    const preferredName = isEn ? cfg.tts_voice_en : cfg.tts_voice_zh;
     const loadVoices = () => {
       const voices = synth.getVoices();
+      const list = normalizeVoiceList(voices);
+      if (list.length) setVoiceOptions(list);
       if (voices && voices.length) {
-        voiceRef.current = pickVoice(voices, lang);
+        voiceRef.current = pickVoice(voices, preferredName, lang);
       }
     };
     loadVoices();
@@ -98,7 +125,7 @@ export default function App() {
         synth.onvoiceschanged = null;
       }
     };
-  }, [cfg.direction]);
+  }, [cfg.direction, cfg.tts_voice_en, cfg.tts_voice_zh]);
 
   useEffect(() => {
     if (!toast) return;
@@ -220,6 +247,15 @@ export default function App() {
   async function onSaveSettings() {
     await invoke("set_config", { cfg });
     setTab("translate");
+  }
+
+  function onSelectVoice(kind, value) {
+    const trimmed = value || "";
+    if (kind === "zh") {
+      setCfg({ ...cfg, tts_voice_zh: trimmed });
+    } else {
+      setCfg({ ...cfg, tts_voice_en: trimmed });
+    }
   }
 
   async function onClearHistory() {
@@ -350,6 +386,32 @@ export default function App() {
               onChange={(e) => setCfg({ ...cfg, model: e.target.value })}
               placeholder="gpt-4o-mini"
             />
+          </div>
+          <div className="field">
+            <label>朗读（中文语音）</label>
+            <select value={cfg.tts_voice_zh} onChange={(e) => onSelectVoice("zh", e.target.value)}>
+              <option value="">自动选择（推荐）</option>
+              {voiceOptions
+                .filter((v) => v.lang.toLowerCase().startsWith("zh"))
+                .map((v) => (
+                  <option key={`${v.name}-${v.lang}`} value={v.name}>
+                    {v.name} ({v.lang})
+                  </option>
+                ))}
+            </select>
+          </div>
+          <div className="field">
+            <label>朗读（英文语音）</label>
+            <select value={cfg.tts_voice_en} onChange={(e) => onSelectVoice("en", e.target.value)}>
+              <option value="">自动选择（推荐）</option>
+              {voiceOptions
+                .filter((v) => v.lang.toLowerCase().startsWith("en"))
+                .map((v) => (
+                  <option key={`${v.name}-${v.lang}`} value={v.name}>
+                    {v.name} ({v.lang})
+                  </option>
+                ))}
+            </select>
           </div>
           <div className="row">
             <button className="primary" onClick={onSaveSettings}>保存</button>
