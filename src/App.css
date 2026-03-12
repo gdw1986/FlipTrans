@@ -97,13 +97,14 @@ nav button.active {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 10px;
+  padding: 6px 14px;
   border-radius: 999px;
-  background: rgba(99, 102, 241, 0.12);
-  color: #4338ca;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 .toggle {
@@ -352,6 +353,9 @@ button.primary:hover {
     .label.tag {
     background: rgba(99, 102, 241, 0.22);
     color: #c7d2fe;
+    font-size: 16px;
+    font-weight: 600;
+    padding: 6px 14px;
   }
 
   .test-result {

@@ -76,6 +76,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState([]);
   const [tab, setTab] = useState("translate"); // translate | history | settings
+  const [pendingCfg, setPendingCfg] = useState(null); // 未保存的设置
   const [autoClipboard, setAutoClipboard] = useState(true);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState("");
@@ -154,13 +155,21 @@ export default function App() {
             }
 
             if (shouldTranslate(text)) {
+              // 防止循环翻译：如果这是上次的自动翻译结果，跳过
+              if (text === lastAutoOutputRef.current) {
+                return;
+              }
+              // 防止重复翻译同一内容
+              if (text === lastAutoSourceRef.current) return;
+              
               const autoDir = detectDirection(text);
               if (autoDir) {
-                if (text === lastAutoSourceRef.current) return;
                 lastAutoSourceRef.current = text;
                 const res = await doTranslate(text, autoDir);
                 if (typeof res === "string" && res.trim()) {
                   lastAutoOutputRef.current = res;
+                  // 同步更新 lastClipboardRef，避免下次轮询重复检测
+                  lastClipboardRef.current = res;
                 }
                 setInput(text);
                 setTab("translate");
@@ -245,16 +254,27 @@ export default function App() {
   }
 
   async function onSaveSettings() {
-    await invoke("set_config", { cfg });
+    const cfgToSave = pendingCfg || cfg;
+    await invoke("set_config", { cfg: cfgToSave });
+    setCfg(cfgToSave);
+    setPendingCfg(null);
     setTab("translate");
+  }
+
+  function onTabChange(newTab) {
+    if (newTab !== "settings") {
+      setPendingCfg(null);
+    }
+    setTab(newTab);
   }
 
   function onSelectVoice(kind, value) {
     const trimmed = value || "";
+    const current = pendingCfg || cfg;
     if (kind === "zh") {
-      setCfg({ ...cfg, tts_voice_zh: trimmed });
+      setPendingCfg({ ...current, tts_voice_zh: trimmed });
     } else {
-      setCfg({ ...cfg, tts_voice_en: trimmed });
+      setPendingCfg({ ...current, tts_voice_en: trimmed });
     }
   }
 
@@ -283,13 +303,13 @@ export default function App() {
       <header>
         <h1>FlipTrans</h1>
         <nav>
-          <button className={tab === "translate" ? "active" : ""} onClick={() => setTab("translate")}>
+          <button className={tab === "translate" ? "active" : ""} onClick={() => onTabChange("translate")}>
             翻译
           </button>
-          <button className={tab === "history" ? "active" : ""} onClick={() => setTab("history")}>
+          <button className={tab === "history" ? "active" : ""} onClick={() => onTabChange("history")}>
             历史
           </button>
-          <button className={tab === "settings" ? "active" : ""} onClick={() => setTab("settings")}>
+          <button className={tab === "settings" ? "active" : ""} onClick={() => onTabChange("settings")}>
             设置
           </button>
         </nav>
@@ -365,16 +385,16 @@ export default function App() {
           <div className="field">
             <label>Base URL</label>
             <input
-              value={cfg.base_url}
-              onChange={(e) => setCfg({ ...cfg, base_url: e.target.value })}
+              value={(pendingCfg || cfg).base_url}
+              onChange={(e) => setPendingCfg({ ...(pendingCfg || cfg), base_url: e.target.value })}
               placeholder="https://api.openai.com/v1"
             />
           </div>
           <div className="field">
             <label>API Key</label>
             <input
-              value={cfg.api_key}
-              onChange={(e) => setCfg({ ...cfg, api_key: e.target.value })}
+              value={(pendingCfg || cfg).api_key}
+              onChange={(e) => setPendingCfg({ ...(pendingCfg || cfg), api_key: e.target.value })}
               placeholder="sk-..."
               type="password"
             />
@@ -382,14 +402,14 @@ export default function App() {
           <div className="field">
             <label>Model</label>
             <input
-              value={cfg.model}
-              onChange={(e) => setCfg({ ...cfg, model: e.target.value })}
+              value={(pendingCfg || cfg).model}
+              onChange={(e) => setPendingCfg({ ...(pendingCfg || cfg), model: e.target.value })}
               placeholder="gpt-4o-mini"
             />
           </div>
           <div className="field">
             <label>朗读（中文语音）</label>
-            <select value={cfg.tts_voice_zh} onChange={(e) => onSelectVoice("zh", e.target.value)}>
+            <select value={(pendingCfg || cfg).tts_voice_zh} onChange={(e) => onSelectVoice("zh", e.target.value)}>
               <option value="">自动选择（推荐）</option>
               {voiceOptions
                 .filter((v) => v.lang.toLowerCase().startsWith("zh"))
@@ -402,7 +422,7 @@ export default function App() {
           </div>
           <div className="field">
             <label>朗读（英文语音）</label>
-            <select value={cfg.tts_voice_en} onChange={(e) => onSelectVoice("en", e.target.value)}>
+            <select value={(pendingCfg || cfg).tts_voice_en} onChange={(e) => onSelectVoice("en", e.target.value)}>
               <option value="">自动选择（推荐）</option>
               {voiceOptions
                 .filter((v) => v.lang.toLowerCase().startsWith("en"))
