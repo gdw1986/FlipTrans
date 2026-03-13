@@ -90,7 +90,7 @@ jobs:
           tag_name: ${{ steps.version.outputs.tag }}
           name: ${{ steps.version.outputs.name }}
           files: |
-            dist/**/fliptrans*.exe
-            dist/**/fliptrans*.msi
-            dist/**/fliptrans*.dmg
-            dist/**/fliptrans-*.app.tar.gz
+            dist/**/FlipTrans*.exe
+            dist/**/FlipTrans*.msi
+            dist/**/FlipTrans*.dmg
+            dist/**/FlipTrans*.app.tar.gz
