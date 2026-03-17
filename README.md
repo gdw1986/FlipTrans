@@ -1,6 +1,12 @@
 # FlipTrans
 
-一款基于 **Tauri + React (Vite)** 的桌面翻译工具，主打“轻量、快捷、可配置”。支持剪贴板自动监听、一键翻译与历史记录管理。
+一款基于 **Tauri + React (Vite)** 的桌面翻译工具，主打"轻量、快捷、可配置"。支持剪贴板自动监听、一键翻译与历史记录管理。
+
+## 📸 截图
+
+| 翻译 | 历史 | 设置 |
+|:---:|:---:|:---:|
+| ![翻译页](screenshots/translate.png) | ![历史页](screenshots/history.png) | ![设置页](screenshots/settings.png) |
 
 ## ✨ 功能特性
 - **剪贴板自动监听**：复制即翻译（可开关）
@@ -33,8 +39,8 @@ npm run tauri build
 
 ### TTS 说明
 - 朗读基于系统 Web Speech API（speechSynthesis）。
-- Windows + Edge 通常提供 “Microsoft Neural / Natural” 语音（带声调）。
-- 在“设置”中可分别选择中文/英文朗读语音，默认自动挑选。
+- Windows + Edge 通常提供 "Microsoft Neural / Natural" 语音（带声调）。
+- 在"设置"中可分别选择中文/英文朗读语音，默认自动挑选。
 
 ## 📄 许可
 MIT
